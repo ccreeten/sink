@@ -1,9 +1,11 @@
 package io.sink.push.sink.impl;
 
+import io.sink.push.Pushable;
 import io.sink.push.sink.Sink;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 public final class SinkExtensions {
@@ -22,5 +24,10 @@ public final class SinkExtensions {
     // TODO: compiler bug? using U extends Iterable<O> instead of bounded wildcard works (should be no difference?)
     public static <I, O, U extends Iterable<O>> Function<Sink<I, U>, Sink<I, O>> flatten() {
         return FlattenSink::new;
+    }
+
+    @SafeVarargs
+    public static <I, O> Function<Sink<I, O>, Sink<I, O>> tee(final Pushable<? super O>... others) {
+        return upSink -> new TeeSink<>(upSink, others);
     }
 }

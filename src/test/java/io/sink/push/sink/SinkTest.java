@@ -4,6 +4,7 @@ import io.sink.push.Pushable;
 import io.sink.push.result.Result;
 import io.sink.push.result.impl.ContinuousResult;
 import io.sink.push.result.impl.DiscreteResult;
+import io.sink.push.sink.impl.SinkExtensions;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -16,6 +17,7 @@ import java.util.stream.Collector;
 
 import static io.sink.push.sink.impl.SinkExtensions.flatten;
 import static io.sink.push.sink.impl.SinkExtensions.group;
+import static io.sink.push.sink.impl.SinkExtensions.tee;
 import static io.sink.push.sink.impl.SinkExtensions.unpack;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.counting;
@@ -551,6 +553,34 @@ public class SinkTest {
 //      a
 //      b
 //      c
+    }
+
+    @Test
+    public void teeIng() {
+        final Pushable<String> split1 = Sink.<String>create()
+                .map(string -> "split1: " + string)
+                .forEach(System.out::println);
+
+        final Pushable<String> split2 = Sink.<String>create()
+                .map(string -> "split2: " + string)
+                .forEach(System.out::println);
+
+        final Pushable<String> source = Sink.<String>create()
+                .chain(tee(split1, split2))
+                .map(string -> "source: " + string)
+                .forEach(System.out::println);
+
+        source.push("a", "b", "c");
+
+//      source: a
+//      split1: a
+//      split2: a
+//      source: b
+//      split1: b
+//      split2: b
+//      source: c
+//      split1: c
+//      split2: c
     }
 
     private static ToIntFunction<Integer> unboxed() {
